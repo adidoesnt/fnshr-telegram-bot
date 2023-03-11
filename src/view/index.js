@@ -1,6 +1,12 @@
 require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
 const { startButtons, taskButtons, commands } = require("./constants");
+const {
+  setTask,
+  giveUpOnTask,
+  completeTask,
+  getTasks,
+} = require("../controller/controller");
 
 const TOKEN = process.env.API_TOKEN;
 const bot = new TelegramBot(TOKEN, { polling: true });
@@ -18,16 +24,43 @@ const exitQueryHandler = (query) => {
 };
 
 const setTaskHandler = (query) => {
-  bot.sendMessage(query.message.chat.id, "Setting task.");
+  const username = query.from.username;
+  // set task
 };
 
-const giveUpHandler = (query) => {
-  bot.sendMessage(query.message.chat.id, "Giving up on task.");
+async function giveUpHandler(query) {
+  const username = query.from.username;
+  const tasks = await getTasks(username);
+  const buttons = tasks.map((task) => {
+    return { text: task, callback_data: `forfeit_task:${task}` };
+  });
+  bot.sendMessage(
+    query.message.chat.id,
+    "Which task would you like to mark forfeir?",
+    {
+      reply_markup: {
+        inline_keyboard: buttons.map((button) => [button]),
+      },
+    }
+  );
 };
 
-const completeHander = (query) => {
-  bot.sendMessage(query.message.chat.id, "Marking task complete.");
-};
+async function completeHandler(query) {
+  const username = query.from.username;
+  const tasks = await getTasks(username);
+  const buttons = tasks.map((task) => {
+    return { text: task, callback_data: `complete_task:${task}` };
+  });
+  bot.sendMessage(
+    query.message.chat.id,
+    "Which task would you like to mark complete?",
+    {
+      reply_markup: {
+        inline_keyboard: buttons.map((button) => [button]),
+      },
+    }
+  );
+}
 
 const invalidOptionHandler = (query) => {
   bot.sendMessage(query.message.chat.id, "Invalid option.");
@@ -48,24 +81,34 @@ bot.onText(/\/menu/, (msg) => {
 });
 
 bot.on("callback_query", (query) => {
-  switch (query.data) {
-    case "show_menu":
-      menuCommandHandler(query.message);
-      break;
-    case "see_you":
-      exitQueryHandler(query);
-      break;
-    case "set_task":
-      setTaskHandler(query);
-      break;
-    case "give_up":
-      giveUpHandler(query);
-      break;
-    case "mark_task_complete":
-      completeHander(query);
-      break;
-    default:
-      invalidOptionHandler(query);
-      break;
+  if (query.data.startsWith("complete_task:")) {
+    const username = query.from.username;
+    const taskTitle = query.data.replace("complete_task:", "");
+    completeTask(username, taskTitle);
+  } else if (query.data.startsWith("forfeit_task:")) {
+    const username = query.from.username;
+    const taskTitle = query.data.replace("forfeit_task:", "");
+    giveUpOnTask(username, taskTitle);
+  } else {
+    switch (query.data) {
+      case "show_menu":
+        menuCommandHandler(query.message);
+        break;
+      case "see_you":
+        exitQueryHandler(query);
+        break;
+      case "set_task":
+        setTaskHandler(query);
+        break;
+      case "give_up":
+        giveUpHandler(query);
+        break;
+      case "mark_task_complete":
+        completeHandler(query);
+        break;
+      default:
+        invalidOptionHandler(query);
+        break;
+    }
   }
 });
