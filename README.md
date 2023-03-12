@@ -29,3 +29,6 @@ You can also use:
 yarn dev
 ```
 However, I do not recommend this as the hot reload may cause you to hit Telegram's request limit.
+
+## Additional Information
+The bot's telegram handle is ```@fnshr_bot```.
