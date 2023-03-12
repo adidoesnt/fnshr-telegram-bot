@@ -5,6 +5,7 @@ const {
   taskButtons,
   commands,
   isValidTime,
+  getDate
 } = require("./constants");
 const {
   setTask,
@@ -32,8 +33,12 @@ const setTaskHandler = (query) => {
   const username = query.from.username;
   const task = {};
   const chatId = query.message.chat.id;
+  const titleHandler = (msg) => {
+    taskTitleCallback(msg, username, chatId, task);
+    bot.removeListener("message", titleHandler);
+  };
   bot.sendMessage(chatId, "What is the title for this task?").then(() => {
-    bot.on("message", (msg) => taskTitleCallback(msg, username, chatId, task));
+    bot.on("message", titleHandler);
   });
 };
 
@@ -42,16 +47,17 @@ const taskTitleCallback = (msg, username, chatId, task) => {
   task.title = title;
   const reply = `Okay, I'll title this task "${title}".`;
   bot.sendMessage(chatId, reply).then(() => {
-    bot.removeListener("message", (msg) => taskTitleCallback);
     taskDescriptionHandler(username, chatId, task);
   });
 };
 
 const taskDescriptionHandler = (username, chatId, task) => {
+  const descriptionHandler = (msg) => {
+    taskDescriptionCallback(msg, username, chatId, task);
+    bot.removeListener("message", descriptionHandler);
+  };
   bot.sendMessage(chatId, "What is the description for this task?").then(() => {
-    bot.on("message", (msg) =>
-      taskDescriptionCallback(msg, username, chatId, task)
-    );
+    bot.on("message", descriptionHandler);
   });
 };
 
@@ -66,41 +72,43 @@ const taskDescriptionCallback = (msg, username, chatId, task) => {
 };
 
 const taskDeadlineHandler = (username, chatId, task) => {
+  const deadlineHandler = (msg) => {
+    taskDeadlineCallack(msg, username, chatId, task);
+    bot.removeListener("message", deadlineHandler);
+  };
+  bot.removeListener("message", deadlineHandler);
   bot
     .sendMessage(
       chatId,
       'What is the deadline for this task? This should be 24-hour time, for example "13:00".'
     )
     .then(() => {
-      bot.on("message", (msg) =>
-        taskDeadlineCallack(msg, username, chatId, task)
-      );
+      bot.on("message", deadlineHandler);
     });
 };
 
-// const taskDeadlineCallack = (msg, username, chatId, task) => {
-//   const deadline = msg.text;
-//   if (!isValidTime(deadline)) {
-//     bot
-//       .sendMessage(chatId, "Sorry, that's an invalid time. Please try again.")
-//       .then(() => {
-//         bot.removeListener("message", (msg) => taskDeadlineCallack);
-//         taskDeadlineHandler(username, chatId, task);
-//       });
-//   } else {
-//     task.deadline = deadline;
-//     task.status = "ongoing";
-//     const reply = `Alright, I'll set the deadline for this task to ${deadline} today.`;
-//     bot.sendMessage(chatId, reply).then(() => {
-//       setTask(username, task);
-//       const now = new Date();
-//       const future = Date.parse(deadline);
-//       const diff = future - now.getTime();
-//       setTimeout(deadlineCheckHandler(username, chatId, task), diff);
-//       bot.removeListener("message", (msg) => taskDeadlineCallack);
-//     });
-//   }
-// };
+const taskDeadlineCallack = (msg, username, chatId, task) => {
+  const deadline = msg.text;
+  if (!isValidTime(deadline)) {
+    bot
+      .sendMessage(chatId, "Sorry, that's an invalid time. Please try again.")
+      .then(() => {
+        taskDeadlineHandler(username, chatId, task);
+      });
+  } else {
+    task.date = getDate();
+    task.deadline = deadline;
+    task.status = "ongoing";
+    const reply = `Alright, I'll set the deadline for this task to ${deadline} today.`;
+    bot.sendMessage(chatId, reply).then(() => {
+      setTask(username, task);
+      const now = new Date();
+      const future = Date.parse(deadline);
+      const diff = future - now.getTime();
+      // setTimeout(deadlineCheckHandler(username, chatId, task), diff);
+    });
+  }
+};
 
 // const deadlineCheckHandler = (username, chatId, task) => {
 //   const title = task.title;

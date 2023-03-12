@@ -4,7 +4,8 @@ const { Schema, model } = mongoose;
 const taskSchema = new Schema({
   title: { type: String, required: true }, // title unique
   description: { type: String, required: true },
-  deadline: { type: Number, required: true },
+  date: { type: String, required: true },
+  deadline: { type: String, required: true },
   status: {
     type: String,
     required: true,

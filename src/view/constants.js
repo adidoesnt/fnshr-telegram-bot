@@ -34,9 +34,18 @@ function isValidTime(timeString) {
   return regex.test(timeString);
 }
 
-module.exports = {
-    startButtons,
-    taskButtons,
-    commands,
-    isValidTime
+function getDate() {
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, "0");
+  const month = String(today.getMonth() + 1).padStart(2, "0"); // add 1 because months are zero-indexed
+  const year = today.getFullYear();
+  return `${day}/${month}/${year}`;
 }
+
+module.exports = {
+  startButtons,
+  taskButtons,
+  commands,
+  isValidTime,
+  getDate,
+};
