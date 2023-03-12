@@ -20,14 +20,18 @@ async function addTaskToUser(username, newTask) {
   const taskExists = user.tasks.some((task) => tasksAreEqual(task, newTask));
   if (!taskExists) {
     await User.findByIdAndUpdate(_id, { $push: { tasks: newTask } });
+    return true;
+  } else {
+    return false;
   }
 }
 
 async function setTask(username, task) {
   await initDb();
   const newTask = new Task({ ...task });
-  await addTaskToUser(username, newTask);
+  const success = await addTaskToUser(username, newTask);
   await closeDb();
+  return success;
 }
 
 async function updateTask(username, taskTitle, status) {

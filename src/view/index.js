@@ -101,15 +101,17 @@ const taskDeadlineCallack = (msg, username, chatId, task) => {
     task.status = "ongoing";
     const reply = `Alright, I'll set the deadline for this task to ${deadline} today.`;
     bot.sendMessage(chatId, reply).then(() => {
-      setTask(username, task);
-      const now = new Date();
-      const [hours, minutes] = deadline.split(":");
-      const future = new Date();
-      future.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-      const diff = future - now.getTime();
-      setTimeout(() => {
-        deadlineCheckHandler(username, chatId, task);
-      }, diff);
+      const success = setTask(username, task);
+      if (success) {
+        const now = new Date();
+        const [hours, minutes] = deadline.split(":");
+        const future = new Date();
+        future.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        const diff = future - now.getTime();
+        setTimeout(() => {
+          deadlineCheckHandler(username, chatId, task);
+        }, diff);
+      }
     });
   }
 };
