@@ -4,7 +4,7 @@ const startButtons = [
     callback_data: "show_menu",
   },
   {
-    text: "All Good",
+    text: "Exit",
     callback_data: "see_you",
   },
 ];
@@ -14,18 +14,11 @@ const taskButtons = [
     text: "Set Task",
     callback_data: "set_task",
   },
-  {
-    text: "Mark Task Complete",
-    callback_data: "mark_task_complete",
-  },
-  {
-    text: "Give Up On Task",
-    callback_data: "give_up",
-  },
 ];
 
 const deadlineCheckButtons = {
   keyboard: [["Yes", "No"]],
+  one_time_keyboard: true,
 };
 
 const commands = [
