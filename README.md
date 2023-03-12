@@ -13,6 +13,8 @@ git clone https://github.com/adidoesnt/fnshr-telegram-bot.git
 ```
 
 ## Running the Bot
+**You will need an environment file for the bot to work when run locally, contact me for more details.**  
+  
 Once the repository has been cloned, run the following to install dependencies:
 ```
 git pull origin main
@@ -31,4 +33,4 @@ yarn dev
 However, I do not recommend this as the hot reload may cause you to hit Telegram's request limit.
 
 ## Additional Information
-The bot's telegram handle is ```@fnshr_bot```.
+The bot's telegram handle is ```@fnshr_bot```.  
