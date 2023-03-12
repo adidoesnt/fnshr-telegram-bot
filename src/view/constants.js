@@ -29,8 +29,14 @@ const commands = [
   { command: "menu", description: "Display the menu" },
 ];
 
+function isValidTime(timeString) {
+  const regex = /^([01]\d|2[0-3]):[0-5]\d$/;
+  return regex.test(timeString);
+}
+
 module.exports = {
     startButtons,
     taskButtons,
-    commands
+    commands,
+    isValidTime
 }

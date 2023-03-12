@@ -3,7 +3,7 @@ const { Schema, model } = mongoose;
 
 const taskSchema = new Schema({
   title: { type: String, required: true }, // title unique
-  description: { type: String, required: false },
+  description: { type: String, required: true },
   deadline: { type: Number, required: true },
   status: {
     type: String,

@@ -2,11 +2,7 @@ const { User, Task } = require("../model/schemas");
 const { initDb, closeDb } = require("../model/repository");
 
 const tasksAreEqual = (task1, task2) => {
-  return (
-    task1.title === task2.title &&
-    task1.description === task2.description &&
-    task1.deadline === task2.deadline
-  );
+  return task1.title === task2.title;
 };
 
 async function addUser(username) {
