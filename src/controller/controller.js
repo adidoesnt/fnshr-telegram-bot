@@ -1,10 +1,6 @@
 const { User, Task } = require("../model/schemas");
 const { initDb, closeDb } = require("../model/repository");
 
-const tasksAreEqual = (task1, task2) => {
-  return task1.title === task2.title;
-};
-
 async function addUser(username) {
   const newUser = new User({
     username,
@@ -17,21 +13,14 @@ async function addTaskToUser(username, newTask) {
   let user = await User.findOne({ username });
   if (!user) user = await addUser(username);
   const _id = user["_id"];
-  const taskExists = user.tasks.some((task) => tasksAreEqual(task, newTask));
-  if (!taskExists) {
-    await User.findByIdAndUpdate(_id, { $push: { tasks: newTask } });
-    return true;
-  } else {
-    return false;
-  }
+  await User.findByIdAndUpdate(_id, { $push: { tasks: newTask } });
 }
 
 async function setTask(username, task) {
   await initDb();
   const newTask = new Task({ ...task });
-  const success = await addTaskToUser(username, newTask);
+  await addTaskToUser(username, newTask);
   await closeDb();
-  return success;
 }
 
 async function updateTask(username, taskTitle, status) {
