@@ -64,7 +64,9 @@ async function completeTask(username, taskTitle) {
 async function getTasks(username) {
   await initDb();
   let user = await User.findOne({ username });
-  const tasks = user.tasks.map((task) => task.title);
+  const tasks = user.tasks
+    .filter((task) => task.status == "ongoing")
+    .map((task) => task.title);
   await closeDb();
   return tasks;
 }

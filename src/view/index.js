@@ -6,6 +6,7 @@ const {
   commands,
   isValidTime,
   getDate,
+  deadlineCheckButtons,
 } = require("./constants");
 const {
   setTask,
@@ -103,9 +104,13 @@ const taskDeadlineCallack = (msg, username, chatId, task) => {
     bot.sendMessage(chatId, reply).then(() => {
       setTask(username, task);
       const now = new Date();
-      const future = Date.parse(deadline);
+      const [hours, minutes] = deadline.split(":");
+      const future = new Date();
+      future.setHours(parseInt(hours), parseInt(minutes), 0, 0);
       const diff = future - now.getTime();
-      setTimeout(deadlineCheckHandler(username, chatId, task), diff);
+      setTimeout(() => {
+        deadlineCheckHandler(username, chatId, task);
+      }, diff);
     });
   }
 };
@@ -117,13 +122,13 @@ const deadlineCheckHandler = (username, chatId, task) => {
     bot.removeListener("message", deadlineCheckHelper);
   };
   bot.removeListener("message", deadlineCheckHelper);
-  bot.sendMessage(chatId, `Did you complete your task "${title}"?`).then(() => {
-    bot.on("message", deadlineCheckHelper, {
-      reply_markup: {
-        inline_keyboard: [["yes", "no"]],
-      },
+  bot
+    .sendMessage(chatId, `Did you complete your task "${title}"?`, {
+      reply_markup: deadlineCheckButtons,
+    })
+    .then(() => {
+      bot.on("message", deadlineCheckHelper);
     });
-  });
 };
 
 const deadlineCheckCallback = (msg, username, chatId, task) => {
@@ -158,7 +163,7 @@ async function giveUpHandler(query) {
   });
   bot.sendMessage(
     query.message.chat.id,
-    "Which task would you like to mark forfeir?",
+    "Which task would you like to forfeit?",
     {
       reply_markup: {
         inline_keyboard: buttons.map((button) => [button]),

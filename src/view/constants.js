@@ -24,6 +24,10 @@ const taskButtons = [
   },
 ];
 
+const deadlineCheckButtons = {
+  keyboard: [["Yes", "No"]],
+};
+
 const commands = [
   { command: "start", description: "Start the bot" },
   { command: "menu", description: "Display the menu" },
@@ -31,7 +35,20 @@ const commands = [
 
 function isValidTime(timeString) {
   const regex = /^([01]\d|2[0-3]):[0-5]\d$/;
-  return regex.test(timeString);
+  if (!regex.test(timeString)) {
+    return false;
+  }
+
+  const now = new Date();
+  const [hours, minutes] = timeString.split(":").map(Number);
+  const future = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    hours,
+    minutes
+  );
+  return future > now;
 }
 
 function getDate() {
@@ -48,4 +65,5 @@ module.exports = {
   commands,
   isValidTime,
   getDate,
+  deadlineCheckButtons,
 };
