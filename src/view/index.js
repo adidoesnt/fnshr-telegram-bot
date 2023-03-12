@@ -21,6 +21,7 @@ const menuCommandHandler = (msg) => {
   bot.sendMessage(msg.chat.id, "What would you like to to do?", {
     reply_markup: {
       inline_keyboard: [[taskButtons[0]]],
+      selective: true
     },
   });
 };
@@ -36,7 +37,7 @@ const setTaskHandler = (query) => {
   const userId = query.from.id;
   bot
     .sendMessage(chatId, `@${username}, what is the title for this task?`, {
-      reply_markup: { force_reply: true },
+      reply_markup: { force_reply: true, selective: true },
     })
     .then((sentMessage) => {
       bot.onReplyToMessage(chatId, sentMessage.message_id, (msg) => {
@@ -62,7 +63,7 @@ const taskDescriptionHandler = (username, chatId, task, userId) => {
       chatId,
       `@${username}, what is the description for this task?`,
       {
-        reply_markup: { force_reply: true },
+        reply_markup: { force_reply: true, selective: true },
       }
     )
     .then((sentMessage) => {
@@ -89,7 +90,7 @@ const taskDeadlineHandler = (username, chatId, task, userId) => {
       chatId,
       `@${username}, what is the deadline for this task? This should be 24-hour time, for example "13:00".`,
       {
-        reply_markup: { force_reply: true },
+        reply_markup: { force_reply: true, selective: true },
       }
     )
     .then((sentMessage) => {
@@ -181,6 +182,7 @@ bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, "Welcome to Fnshr! I'm Finn, how can I help?", {
     reply_markup: {
       inline_keyboard: [[startButtons[0]], [startButtons[1]]],
+      selective: true
     },
   });
 });
