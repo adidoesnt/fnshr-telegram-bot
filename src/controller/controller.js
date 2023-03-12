@@ -27,7 +27,9 @@ async function updateTask(username, taskTitle, status) {
   await initDb();
   let user = await User.findOne({ username });
   if (!user) user = await addUser(username);
-  const taskIndex = user.tasks.findIndex((task) => task.title === taskTitle);
+  const taskIndex = user.tasks.findIndex(
+    (task) => task.title === taskTitle && task.status === "ongoing"
+  );
   if (taskIndex !== -1) {
     const task = user.tasks[taskIndex];
     const updates = {
