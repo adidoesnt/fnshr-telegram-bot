@@ -19,6 +19,7 @@ const taskButtons = [
 const deadlineCheckButtons = {
   keyboard: [["Yes", "No"]],
   one_time_keyboard: true,
+  force_reply: true
 };
 
 const commands = [
