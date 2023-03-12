@@ -17,17 +17,18 @@ const {
 const TOKEN = process.env.API_TOKEN;
 const bot = new TelegramBot(TOKEN, { polling: true });
 
-const menuCommandHandler = (msg) => {
-  bot.sendMessage(msg.chat.id, "What would you like to to do?", {
+const menuCommandHandler = (msg, username) => {
+  bot.sendMessage(msg.chat.id, `@${username}, what would you like to to do?`, {
     reply_markup: {
       inline_keyboard: [[taskButtons[0]]],
-      selective: true
+      selective: true,
     },
   });
 };
 
 const exitQueryHandler = (query) => {
-  bot.sendMessage(query.message.chat.id, "See you later!");
+  const username = query.from.username;
+  bot.sendMessage(query.message.chat.id, `See you later @${username}!`);
 };
 
 const setTaskHandler = (query) => {
@@ -35,14 +36,19 @@ const setTaskHandler = (query) => {
   const task = {};
   const chatId = query.message.chat.id;
   const userId = query.from.id;
+  let listenerId;
+
+  const titleHandler = (msg) => {
+    taskTitleCallback(msg, username, chatId, task, userId);
+    bot.removeReplyListener(listenerId);
+  };
+
   bot
     .sendMessage(chatId, `@${username}, what is the title for this task?`, {
       reply_markup: { force_reply: true, selective: true },
     })
     .then((sentMessage) => {
-      bot.onReplyToMessage(chatId, sentMessage.message_id, (msg) => {
-        taskTitleCallback(msg, username, chatId, task, userId);
-      });
+      listenerId = bot.onReplyToMessage(chatId, sentMessage.message_id, titleHandler);
     });
 };
 
@@ -58,6 +64,11 @@ const taskTitleCallback = (msg, username, chatId, task, userId) => {
 };
 
 const taskDescriptionHandler = (username, chatId, task, userId) => {
+  let listenerId;
+  const descriptionHandler = (msg) => {
+    taskDescriptionCallback(msg, username, chatId, task, userId);
+    bot.removeReplyListener(listenerId);
+  };
   bot
     .sendMessage(
       chatId,
@@ -67,9 +78,7 @@ const taskDescriptionHandler = (username, chatId, task, userId) => {
       }
     )
     .then((sentMessage) => {
-      bot.onReplyToMessage(chatId, sentMessage.message_id, (msg) => {
-        taskDescriptionCallback(msg, username, chatId, task, userId);
-      });
+      listenerId = bot.onReplyToMessage(chatId, sentMessage.message_id, descriptionHandler);
     });
 };
 
@@ -85,6 +94,11 @@ const taskDescriptionCallback = (msg, username, chatId, task, userId) => {
 };
 
 const taskDeadlineHandler = (username, chatId, task, userId) => {
+  let listenerId;
+  const deadlineHandler = (msg) => {
+    taskDeadlineCallack(msg, username, chatId, task, userId);
+    bot.removeReplyListener(listenerId);
+  };
   bot
     .sendMessage(
       chatId,
@@ -94,9 +108,7 @@ const taskDeadlineHandler = (username, chatId, task, userId) => {
       }
     )
     .then((sentMessage) => {
-      bot.onReplyToMessage(chatId, sentMessage.message_id, (msg) => {
-        taskDeadlineCallack(msg, username, chatId, task, userId);
-      })
+      listenerId = bot.onReplyToMessage(chatId, sentMessage.message_id, deadlineHandler);
     });
 };
 
@@ -105,7 +117,10 @@ const taskDeadlineCallack = (msg, username, chatId, task, userId) => {
     const deadline = msg.text;
     if (!isValidTime(deadline)) {
       bot
-        .sendMessage(chatId, "Sorry, that's an invalid time. Please try again.")
+        .sendMessage(
+          chatId,
+          `Sorry @${username}, that's an invalid time. Please try again.`
+        )
         .then(() => {
           taskDeadlineHandler(username, chatId, task, userId);
         });
@@ -140,8 +155,9 @@ const deadlineCheckHandler = (username, chatId, task, userId) => {
       }
     )
     .then((sentMessage) => {
-      bot.onReplyToMessage(chatId, sentMessage.message_id, (msg) => {
+      const listenerId = bot.onReplyToMessage(chatId, sentMessage.message_id, (msg) => {
         deadlineCheckCallback(msg, username, chatId, task, userId);
+        bot.removeReplyListener(listenerId);
       });
     });
 };
@@ -151,7 +167,10 @@ const deadlineCheckCallback = (msg, username, chatId, task, userId) => {
     const response = msg.text.toLowerCase();
     switch (response) {
       case "yes":
-        bot.sendMessage(chatId, "Amazing, I'll mark the task complete!");
+        bot.sendMessage(
+          chatId,
+          `Amazing @${username}, I'll mark the task complete!`
+        );
         completeTask(username, task.title);
         break;
       case "no":
@@ -162,7 +181,7 @@ const deadlineCheckCallback = (msg, username, chatId, task, userId) => {
         bot
           .sendMessage(
             chatId,
-            "Sorry, that's an invalid response. Please try again."
+            `Sorry @${username}, that's an invalid response. Please try again.`
           )
           .then(() => {
             deadlineCheckHandler(username, chatId, task);
@@ -173,28 +192,38 @@ const deadlineCheckCallback = (msg, username, chatId, task, userId) => {
 };
 
 const invalidOptionHandler = (query) => {
-  bot.sendMessage(query.message.chat.id, "Invalid option.");
+  const username = query.from.username;
+  bot.sendMessage(
+    query.message.chat.id,
+    `Sorry @${username}, that's an invalid option.`
+  );
 };
 
 bot.setMyCommands(commands);
 
 bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(msg.chat.id, "Welcome to Fnshr! I'm Finn, how can I help?", {
-    reply_markup: {
-      inline_keyboard: [[startButtons[0]], [startButtons[1]]],
-      selective: true
-    },
-  });
+  const username = msg.from.username;
+  bot.sendMessage(
+    msg.chat.id,
+    `Hi @${username}, welcome to Fnshr! I'm Finn, how can I help?`,
+    {
+      reply_markup: {
+        inline_keyboard: [[startButtons[0]], [startButtons[1]]],
+        selective: true,
+      },
+    }
+  );
 });
 
 bot.onText(/\/menu/, (msg) => {
-  menuCommandHandler(msg);
+  const username = msg.from.username;
+  menuCommandHandler(msg, username);
 });
 
 bot.on("callback_query", (query) => {
   switch (query.data) {
     case "show_menu":
-      menuCommandHandler(query.message);
+      menuCommandHandler(query.message, query.from.username);
       break;
     case "see_you":
       exitQueryHandler(query);
