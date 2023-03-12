@@ -33,96 +33,103 @@ const setTaskHandler = (query) => {
   const username = query.from.username;
   const task = {};
   const chatId = query.message.chat.id;
+  const userId = query.from.id;
   const titleHandler = (msg) => {
-    taskTitleCallback(msg, username, chatId, task);
+    taskTitleCallback(msg, username, chatId, task, userId);
     bot.removeListener("message", titleHandler);
   };
-  bot.sendMessage(chatId, "What is the title for this task?").then(() => {
+  bot.sendMessage(chatId, `@${username}, what is the title for this task?`).then(() => {
     bot.on("message", titleHandler);
   });
 };
 
-const taskTitleCallback = (msg, username, chatId, task) => {
-  const title = msg.text;
-  task.title = title;
-  const reply = `Okay, I'll title this task "${title}".`;
-  bot.sendMessage(chatId, reply).then(() => {
-    taskDescriptionHandler(username, chatId, task);
-  });
+const taskTitleCallback = (msg, username, chatId, task, userId) => {;
+  if (msg.from.id == userId) {
+    const title = msg.text;
+    task.title = title;
+    const reply = `Okay @${username}, I'll title this task "${title}".`;
+    bot.sendMessage(chatId, reply).then(() => {
+      taskDescriptionHandler(username, chatId, task, userId);
+    });
+  }
 };
 
-const taskDescriptionHandler = (username, chatId, task) => {
+const taskDescriptionHandler = (username, chatId, task, userId) => {
   const descriptionHandler = (msg) => {
-    taskDescriptionCallback(msg, username, chatId, task);
+    taskDescriptionCallback(msg, username, chatId, task, userId);
     bot.removeListener("message", descriptionHandler);
   };
-  bot.sendMessage(chatId, "What is the description for this task?").then(() => {
+  bot.sendMessage(chatId, `@${username}, what is the description for this task?`).then(() => {
     bot.on("message", descriptionHandler);
   });
 };
 
-const taskDescriptionCallback = (msg, username, chatId, task) => {
-  const description = msg.text;
-  task.description = description;
-  const reply = `Okay, I'll set the description for this task to "${description}".`;
-  bot.sendMessage(chatId, reply).then(() => {
-    bot.removeListener("message", (msg) => taskDescriptionCallback);
-    taskDeadlineHandler(username, chatId, task);
-  });
+const taskDescriptionCallback = (msg, username, chatId, task, userId) => {
+  if (msg.from.id == userId) {
+    const description = msg.text;
+    task.description = description;
+    const reply = `Okay @${username}, I'll set the description for this task to "${description}".`;
+    bot.sendMessage(chatId, reply).then(() => {
+      bot.removeListener("message", (msg) => taskDescriptionCallback);
+      taskDeadlineHandler(username, chatId, task, userId);
+    });
+  }
 };
 
-const taskDeadlineHandler = (username, chatId, task) => {
+const taskDeadlineHandler = (username, chatId, task, userId) => {
   const deadlineHandler = (msg) => {
-    taskDeadlineCallack(msg, username, chatId, task);
+    taskDeadlineCallack(msg, username, chatId, task, userId);
     bot.removeListener("message", deadlineHandler);
   };
   bot.removeListener("message", deadlineHandler);
   bot
     .sendMessage(
       chatId,
-      'What is the deadline for this task? This should be 24-hour time, for example "13:00".'
+      `@${username}, what is the deadline for this task? This should be 24-hour time, for example "13:00".`
     )
     .then(() => {
       bot.on("message", deadlineHandler);
     });
 };
 
-const taskDeadlineCallack = (msg, username, chatId, task) => {
-  const deadline = msg.text;
-  if (!isValidTime(deadline)) {
-    bot
-      .sendMessage(chatId, "Sorry, that's an invalid time. Please try again.")
-      .then(() => {
-        taskDeadlineHandler(username, chatId, task);
+const taskDeadlineCallack = (msg, username, chatId, task, userId) => {
+  if (msg.from.id == userId) {
+    const deadline = msg.text;
+    if (!isValidTime(deadline)) {
+      bot
+        .sendMessage(chatId, "Sorry, that's an invalid time. Please try again.")
+        .then(() => {
+          taskDeadlineHandler(username, chatId, task, userId);
+        });
+    } else {
+      task.date = getDate();
+      task.deadline = deadline;
+      task.status = "ongoing";
+      const reply = `Alright @${username}, I'll set the deadline for this task to ${deadline} today.`;
+      bot.sendMessage(chatId, reply).then(() => {
+        setTask(username, task);
+        const now = new Date();
+        const [hours, minutes] = deadline.split(":");
+        const future = new Date();
+        future.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        const diff = future - now.getTime();
+        setTimeout(() => {
+          deadlineCheckHandler(username, chatId, task, userId);
+        }, diff);
       });
-  } else {
-    task.date = getDate();
-    task.deadline = deadline;
-    task.status = "ongoing";
-    const reply = `Alright, I'll set the deadline for this task to ${deadline} today.`;
-    bot.sendMessage(chatId, reply).then(() => {
-      setTask(username, task);
-      const now = new Date();
-      const [hours, minutes] = deadline.split(":");
-      const future = new Date();
-      future.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-      const diff = future - now.getTime();
-      setTimeout(() => {
-        deadlineCheckHandler(username, chatId, task);
-      }, diff);
-    });
+    }
   }
 };
 
-const deadlineCheckHandler = (username, chatId, task) => {
+const deadlineCheckHandler = (username, chatId, task, userId) => {
   const title = task.title;
   const deadlineCheckHelper = (msg) => {
-    deadlineCheckCallback(msg, username, chatId, task);
+    deadlineCheckCallback(msg, username, chatId, task, userId);
     bot.removeListener("message", deadlineCheckHelper);
   };
   bot.removeListener("message", deadlineCheckHelper);
   bot
-    .sendMessage(chatId, `Did you complete your task "${title}"?`, {
+    .sendMessage(chatId, `@${username}, did you complete your task "${title}"?`, {
       reply_markup: deadlineCheckButtons,
     })
     .then(() => {
@@ -130,27 +137,29 @@ const deadlineCheckHandler = (username, chatId, task) => {
     });
 };
 
-const deadlineCheckCallback = (msg, username, chatId, task) => {
-  const response = msg.text.toLowerCase();
-  switch (response) {
-    case "yes":
-      bot.sendMessage(chatId, "Amazing, I'll mark the task complete!");
-      completeTask(username, task.title);
-      break;
-    case "no":
-      bot.sendMessage(chatId, `Uh oh, @${username} has been caught lacking!`);
-      giveUpOnTask(username, task.title);
-      break;
-    default:
-      bot
-        .sendMessage(
-          chatId,
-          "Sorry, that's an invalid response. Please try again."
-        )
-        .then(() => {
-          deadlineCheckHandler(username, chatId, task);
-        });
-      break;
+const deadlineCheckCallback = (msg, username, chatId, task, userId) => {
+  if (msg.from.id == userId) {
+    const response = msg.text.toLowerCase();
+    switch (response) {
+      case "yes":
+        bot.sendMessage(chatId, "Amazing, I'll mark the task complete!");
+        completeTask(username, task.title);
+        break;
+      case "no":
+        bot.sendMessage(chatId, `Uh oh, @${username} has been caught lacking!`);
+        giveUpOnTask(username, task.title);
+        break;
+      default:
+        bot
+          .sendMessage(
+            chatId,
+            "Sorry, that's an invalid response. Please try again."
+          )
+          .then(() => {
+            deadlineCheckHandler(username, chatId, task);
+          });
+        break;
+    }
   }
 };
 
