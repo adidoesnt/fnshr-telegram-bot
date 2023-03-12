@@ -5,7 +5,7 @@ const {
   taskButtons,
   commands,
   isValidTime,
-  getDate
+  getDate,
 } = require("./constants");
 const {
   setTask,
@@ -105,47 +105,50 @@ const taskDeadlineCallack = (msg, username, chatId, task) => {
       const now = new Date();
       const future = Date.parse(deadline);
       const diff = future - now.getTime();
-      // setTimeout(deadlineCheckHandler(username, chatId, task), diff);
+      setTimeout(deadlineCheckHandler(username, chatId, task), diff);
     });
   }
 };
 
-// const deadlineCheckHandler = (username, chatId, task) => {
-//   const title = task.title;
-//   bot.sendMessage(chatId, `Did you complete your task "${title}"?`).then(() => {
-//     bot.on("message", (msg) => deadlineCheckCallback, {
-//       reply_markup: {
-//         inline_keyboard: [["yes", "no"]],
-//       },
-//     });
-//   });
-// };
+const deadlineCheckHandler = (username, chatId, task) => {
+  const title = task.title;
+  const deadlineCheckHelper = (msg) => {
+    deadlineCheckCallback(msg, username, chatId, task);
+    bot.removeListener("message", deadlineCheckHelper);
+  };
+  bot.removeListener("message", deadlineCheckHelper);
+  bot.sendMessage(chatId, `Did you complete your task "${title}"?`).then(() => {
+    bot.on("message", deadlineCheckHelper, {
+      reply_markup: {
+        inline_keyboard: [["yes", "no"]],
+      },
+    });
+  });
+};
 
-// const deadlineCheckCallback = (msg, username, chatId, task) => {
-//   const response = msg.text.toLowerCase();
-//   switch (response) {
-//     case "yes":
-//       bot.sendMessage(chatId, "Amazing, I'll mark the task complete!");
-//       completeTask(username, task.title);
-//       break;
-//     case "no":
-//       bot.sendMessage(chatId, `Uh oh, @${username} has been caught lacking!`);
-//       giveUpOnTask(username, task.title);
-//       break;
-//     default:
-//       bot
-//         .sendMessage(
-//           chatId,
-//           "Sorry, that's an invalid response. Please try again."
-//         )
-//         .then(() => {
-//           bot.removeListener("message", (msg) => deadlineCheckCallback);
-//           deadlineCheckHandler(username, chatId, task);
-//         });
-//       break;
-//   }
-//   bot.removeListener("message", (msg) => deadlineCheckCallback);
-// };
+const deadlineCheckCallback = (msg, username, chatId, task) => {
+  const response = msg.text.toLowerCase();
+  switch (response) {
+    case "yes":
+      bot.sendMessage(chatId, "Amazing, I'll mark the task complete!");
+      completeTask(username, task.title);
+      break;
+    case "no":
+      bot.sendMessage(chatId, `Uh oh, @${username} has been caught lacking!`);
+      giveUpOnTask(username, task.title);
+      break;
+    default:
+      bot
+        .sendMessage(
+          chatId,
+          "Sorry, that's an invalid response. Please try again."
+        )
+        .then(() => {
+          deadlineCheckHandler(username, chatId, task);
+        });
+      break;
+  }
+};
 
 async function giveUpHandler(query) {
   const username = query.from.username;
