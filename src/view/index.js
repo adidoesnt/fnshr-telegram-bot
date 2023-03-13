@@ -184,7 +184,7 @@ const deadlineCheckCallback = (msg, username, chatId, task, userId) => {
             `Sorry @${username}, that's an invalid response. Please try again.`
           )
           .then(() => {
-            deadlineCheckHandler(username, chatId, task);
+            deadlineCheckHandler(username, chatId, task, userId);
           });
         break;
     }
