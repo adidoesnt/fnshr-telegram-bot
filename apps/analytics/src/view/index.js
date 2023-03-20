@@ -7,7 +7,8 @@ async function computeCompletionRate() {
     const { tasks, completedTasks } = await getTasks();
     const numComplete = completedTasks.length;
     const total = tasks.length;
-    return numComplete/total;
+    const rate = numComplete/total;
+    return { numComplete, total, rate };
 }
 
 async function getDateMaps() {
@@ -20,26 +21,27 @@ function computeCompletionRateByDate(dateMap, completedDateMap) {
     console.info("computing task completion rate by date...")
     const sortedDateMap = new Map([...dateMap.entries()].sort());
     const sortedCompletedDateMap = new Map([...completedDateMap.entries()].sort());
-    const rates = [];
+    const data = [];
     sortedDateMap.forEach((value, key) => {
         const date = key;
         const numComplete = sortedCompletedDateMap.get(key);
         const total = value;
         const rate = numComplete/total;
-        rates.push({date, rate});
+        data.push({date, numComplete, total, rate});
     });
-    return rates;
+    return data;
 }
 
-computeCompletionRate().then((completionRate) => {
-    console.log(`overall task completion rate: ${completionRate}\n`);
+computeCompletionRate().then((data) => {
+    const { numComplete, total, rate } = data;
+    console.log(`OVERALL TASK INFO - completed tasks: ${numComplete}, total tasks: ${total}, completion rate: ${rate}\n`);
 })
 
 getDateMaps().then(maps => {
     const {dateMap, completedDateMap} = maps;
     const completionRates = computeCompletionRateByDate(dateMap, completedDateMap);
     for(let completionRate of completionRates) {
-        const { date, rate } = completionRate;
-        console.log(`completion rate for ${date}: ${rate}`);
+        const {date, numComplete, total, rate} = completionRate;
+        console.log(`TASK INFO FOR ${date} - completed tasks: ${numComplete}, total tasks: ${total}, completion rate: ${rate}`);
     }
 })
