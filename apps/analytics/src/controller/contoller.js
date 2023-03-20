@@ -6,7 +6,7 @@ async function init() {
 }
 
 async function getUsers() {
-    const users = await User.find({});
+    const users = await User.find();
     return users;
 }
 
@@ -20,12 +20,48 @@ async function getTasks() {
     }
 }
 
+async function getTasksByDate() {
+    const { tasks, completedTasks } = await getTasks();
+    const dateMap = new Map();
+    const completedDateMap = new Map;
+    for(let task of tasks) {
+        const date = task.date;
+        let dateTasks = dateMap.get(date);
+        if(!dateTasks) {
+            dateMap.set(date, 1)
+        } else {
+            let val = dateMap.get(date);
+            val++
+            dateMap.set(date, val);
+        }
+    }
+
+    for(let task of completedTasks) {
+        const date = task.date;
+        let dateTasks = completedDateMap.get(date);
+        if(!dateTasks) {
+            completedDateMap.set(date, 1)
+        } else {
+            let val = completedDateMap.get(date);
+            val++
+            completedDateMap.set(date, val);
+        }
+    }
+
+    return {
+        dateMap,
+        completedDateMap
+    }
+}
+
 async function cleanup() {
     await closeDb();
 }
 
 module.exports = {
     init,
-    getAllTasks,
-    closeDb
+    getTasks,
+    getTasksByDate,
+    closeDb,
+    cleanup
 }
