@@ -5,5 +5,12 @@
   "license": "MIT",
   "dependencies": {
     "mongoose": "^7.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.21"
+  },
+  "scripts": {
+    "start": "node src/view/index.js",
+    "dev": "nodemon src/view/index.js"
   }
 }
