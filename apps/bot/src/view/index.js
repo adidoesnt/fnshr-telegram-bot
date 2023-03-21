@@ -11,7 +11,13 @@ const {
   giveUpOnTask,
   completeTask,
 } = require("../controller/controller");
+const { Configuration, OpenAIApi } = require("openai");
 
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const openai = new OpenAIApi(configuration);
 const TOKEN = process.env.API_TOKEN;
 const bot = new TelegramBot(TOKEN, { polling: true });
 
@@ -53,10 +59,7 @@ const setTaskHandler = (message) => {
         const time = params[1];
         if (!isValidTime(time)) {
           bot
-            .sendMessage(
-              chatId,
-              `Sorry @${username}, that's an invalid time!`
-            )
+            .sendMessage(chatId, `Sorry @${username}, that's an invalid time!`)
             .then(() => {
               setTaskHandler(message);
             });
@@ -143,7 +146,8 @@ bot.onText(/\/start/, (msg) => {
   const username = msg.from.username;
   bot.sendMessage(
     msg.chat.id,
-    `Hi @${username}! use /set to set a task, and use /help if you need further assistance.`
+    `Hi @${username}! Use /set to set a task, and use /help if you need further assistance. ` +
+      `Alternatively, use /finn <task> to ask me to carry out a simple task for you!`
   );
 });
 
@@ -151,16 +155,48 @@ bot.onText(/\/help/, (msg) => {
   const username = msg.from.username;
   bot.sendMessage(
     msg.chat.id,
-    `Hi @${username}! use /set to set a task. When setting a task, the format of your message should be <title>/<deadline>. ` 
-      + `The format for the deadline should be HH:mm, and the time should be a 24 hour time later today. ` 
-      + `For example, if it is 13:00 now, you can input any time from 13:01 to 23:59. `
-      + `Please ensure your task title does not contain "/". Happy Fnshing!`
+    `Hi @${username}! Use /set to set a task. When setting a task, the format of your message should be <title>/<deadline>. ` +
+      `The format for the deadline should be HH:mm, and the time should be a 24 hour time later today. ` +
+      `For example, if it is 13:00 now, you can input any time from 13:01 to 23:59. ` +
+      `Please ensure your task title does not contain "/".\n\n` +
+      `Alternatively, if you have a simple task, you can use /finn, followed by the simple task you would like carried out. ` +
+      `For example, "/finn help me draft an email requesting medical leave from my boss".`
   );
+});
+
+bot.onText(/\/finn (.+)/, (msg, match) => {
+  const username = msg.from.username;
+  const chatId = msg.chat.id;
+  const task = match[1];
+  openai
+    .createCompletion({
+      model: "text-davinci-003",
+      prompt: task,
+      temperature: 0.7,
+      max_tokens: 256,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+    })
+    .then((response) => {
+      const data = response.data;
+      const choices = data.choices;
+      const rawText = choices[0].text;
+      const processedText = rawText.split("\n\n");
+      const reply = `Hey ${username}! Here's the answer to your query: ${processedText[1]}`;
+      bot.sendMessage(chatId, reply);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
 });
 
 bot.on("message", (msg) => {
   const text = msg.text.toLowerCase();
-  if((text.includes("thanks") || text.includes("thank you")) && text.includes("finn")) {
+  if (
+    (text.includes("thanks") || text.includes("thank you")) &&
+    text.includes("finn")
+  ) {
     bot.sendMessage(msg.chat.id, "Glad I could help!");
   }
 });
