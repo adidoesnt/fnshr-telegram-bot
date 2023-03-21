@@ -147,6 +147,17 @@ bot.onText(/\/start/, (msg) => {
   );
 });
 
+bot.onText(/\/help/, (msg) => {
+  const username = msg.from.username;
+  bot.sendMessage(
+    msg.chat.id,
+    `Hi @${username}! use /set to set a task. When setting a task, the format of your message should be <title>/<deadline>. ` 
+      + `The format for the deadline should be HH:mm, and the time should be a 24 hour time later today. ` 
+      + `For example, if it is 13:00 now, you can input any time from 13:01 to 23:59. `
+      + `Please ensure your task title does not contain "/". Happy Fnshing!`
+  );
+});
+
 bot.on("message", (msg) => {
   const text = msg.text.toLowerCase();
   if((text.includes("thanks") || text.includes("thank you")) && text.includes("finn")) {
