@@ -1,0 +1,15 @@
+{
+  "name": "fnshr-telegram-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/adidoesnt/fnshr-telegram-bot.git",
+  "author": "Aditya Banerjee <aditya_banerjee@icloud.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "nx": "14.6.4",
+    "@nrwl/nx-cloud": "latest"
+  }, "scripts": {
+    "start": "nx run-many --target=start --maxParallel=5",
+    "dev": "nx run-many --target=start --maxParallel=5"
+  }
+}

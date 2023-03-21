@@ -1,21 +1,3 @@
-const startButtons = [
-  {
-    text: "Show Menu",
-    callback_data: "show_menu",
-  },
-  {
-    text: "Exit",
-    callback_data: "see_you",
-  },
-];
-
-const taskButtons = [
-  {
-    text: "Set Task",
-    callback_data: "set_task",
-  },
-];
-
 const deadlineCheckButtons = {
   keyboard: [["Yes", "No"]],
   one_time_keyboard: true,
@@ -25,7 +7,8 @@ const deadlineCheckButtons = {
 
 const commands = [
   { command: "start", description: "Start the bot" },
-  { command: "menu", description: "Display the menu" },
+  { command: "set", description: "Set a task" },
+  { command: "help", description: "Need some help?"}
 ];
 
 function isValidTime(timeString) {
@@ -55,8 +38,6 @@ function getDate() {
 }
 
 module.exports = {
-  startButtons,
-  taskButtons,
   commands,
   isValidTime,
   getDate,
