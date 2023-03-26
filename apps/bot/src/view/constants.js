@@ -8,7 +8,6 @@ const deadlineCheckButtons = {
 const commands = [
   { command: "start", description: "Start the bot" },
   { command: "set", description: "Set a task" },
-  { command: "finn", description: "Ask Finn to do a simple task for you! (beta)"},
   { command: "help", description: "Need some help?"}
 ];
 

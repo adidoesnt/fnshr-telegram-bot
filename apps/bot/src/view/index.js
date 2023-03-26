@@ -11,13 +11,7 @@ const {
   giveUpOnTask,
   completeTask,
 } = require("../controller/controller");
-const { Configuration, OpenAIApi } = require("openai");
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const openai = new OpenAIApi(configuration);
 const TOKEN = process.env.API_TOKEN;
 const bot = new TelegramBot(TOKEN, { polling: true });
 
@@ -162,33 +156,6 @@ bot.onText(/\/help/, (msg) => {
       `Alternatively, if you have a simple task, you can use /finn, followed by the simple task you would like carried out. ` +
       `For example, "/finn help me draft an email requesting medical leave from my boss".`
   );
-});
-
-bot.onText(/\/finn (.+)/, (msg, match) => {
-  const username = msg.from.username;
-  const chatId = msg.chat.id;
-  const task = match[1];
-  openai
-    .createCompletion({
-      model: "text-davinci-003",
-      prompt: task,
-      temperature: 0.7,
-      max_tokens: 256,
-      top_p: 1,
-      frequency_penalty: 0,
-      presence_penalty: 0,
-    })
-    .then((response) => {
-      const data = response.data;
-      const choices = data.choices;
-      const rawText = choices[0].text;
-      const processedText = rawText.split("\n\n");
-      const reply = `Hey ${username}! Here's the answer to your query: ${processedText[1]}`;
-      bot.sendMessage(chatId, reply);
-    })
-    .catch((error) => {
-      console.error(error);
-    });
 });
 
 bot.on("message", (msg) => {
