@@ -34,7 +34,6 @@ async function updateTask(username, taskTitle, status) {
     const task = user.tasks[taskIndex];
     const updates = {
       title: task.title,
-      description: task.description,
       date: task.date,
       deadline: task.deadline,
       status: status,

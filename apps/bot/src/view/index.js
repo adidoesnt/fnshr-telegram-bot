@@ -94,14 +94,13 @@ const setTaskHandler = (message) => {
           chatId,
           sentMessage.message_id,
           (msg) => {
-            deadlineCheckCallback(msg, username, chatId, task, userId);
-            bot.removeReplyListener(listenerId);
+            deadlineCheckCallback(msg, username, chatId, task, userId, listenerId);
           }
         );
       });
   };
 
-  const deadlineCheckCallback = (msg, username, chatId, task, userId) => {
+  const deadlineCheckCallback = (msg, username, chatId, task, userId, listenerId) => {
     if (msg.from.id == userId && msg.chat.id == chatId) {
       const response = msg.text.toLowerCase();
       switch (response) {
@@ -111,6 +110,7 @@ const setTaskHandler = (message) => {
             `Amazing @${username}, I'll mark the task complete!`
           );
           completeTask(username, task.title);
+          bot.removeReplyListener(listenerId);
           break;
         case "no":
           bot.sendMessage(
@@ -118,6 +118,7 @@ const setTaskHandler = (message) => {
             `Uh oh, @${username} has been caught lacking!`
           );
           giveUpOnTask(username, task.title);
+          bot.removeReplyListener(listenerId);
           break;
         default:
           bot
@@ -140,8 +141,7 @@ bot.onText(/\/start/, (msg) => {
   const username = msg.from.username;
   bot.sendMessage(
     msg.chat.id,
-    `Hi @${username}! Use /set to set a task, and use /help if you need further assistance. ` +
-      `Alternatively, use /finn <task> to ask me to carry out a simple task for you!`
+    `Hi @${username}! Use /set to set a task, and use /help if you need further assistance.`
   );
 });
 
@@ -152,20 +152,8 @@ bot.onText(/\/help/, (msg) => {
     `Hi @${username}! Use /set to set a task. When setting a task, the format of your message should be <title>/<deadline>. ` +
       `The format for the deadline should be HH:mm, and the time should be a 24 hour time later today. ` +
       `For example, if it is 13:00 now, you can input any time from 13:01 to 23:59. ` +
-      `Please ensure your task title does not contain "/".\n\n` +
-      `Alternatively, if you have a simple task, you can use /finn, followed by the simple task you would like carried out. ` +
-      `For example, "/finn help me draft an email requesting medical leave from my boss".`
+      `Please ensure your task title does not contain "/".`
   );
-});
-
-bot.on("message", (msg) => {
-  const text = msg.text.toLowerCase();
-  if (
-    (text.includes("thanks") || text.includes("thank you")) &&
-    text.includes("finn")
-  ) {
-    bot.sendMessage(msg.chat.id, "Glad I could help!");
-  }
 });
 
 bot.onText(/\/set/, (msg) => {
